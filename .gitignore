@@ -23,3 +23,6 @@ yarn-debug.log*
 
 # local tooling
 .claude/
+
+# case study source screenshots (large PNGs)
+case-study/raw/

@@ -1,0 +1,423 @@
+<title>MAKVO Case Study</title>
+<meta name="description" content="Dsquare Studio case study: designing and prototyping MAKVO, a portfolio-first professional network for people who build digital things.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: editorial case study. A Midnight hero band, then a single reading column with full-width product imagery. */
+  :root {
+    --bg: #F6F7ED;          /* Praxeti White */
+    --surface: #FFFFFB;
+    --sunk: #EAEDDE;
+    --ink: #001F3F;         /* Midnight Mirage */
+    --mute: #4A5E73;
+    --line: #DBDFCF;
+    --hi: #00804C;          /* highlight text on light: Picture Book Green */
+    --frame: #DBDFCF;
+    /* fixed brand colours */
+    --midnight: #001F3F; --praxeti: #F6F7ED; --spring: #DBE64C; --mantis: #74C365; --green: #00804C; --nuit: #1E488F;
+    --display: "Geist", "Helvetica Neue", Arial, sans-serif;
+    --body: "Geist", "Helvetica Neue", Arial, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --gutter: clamp(16px, 4vw, 48px);
+    --max: 1200px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #001F3F; --surface: #072A4F; --sunk: #0C345E; --ink: #F6F7ED; --mute: #A8B7C7; --line: #1C4066; --hi: #DBE64C; --frame: #1C4066; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #001F3F; --surface: #072A4F; --sunk: #0C345E; --ink: #F6F7ED; --mute: #A8B7C7; --line: #1C4066; --hi: #DBE64C; --frame: #1C4066; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: inherit; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; margin: 0; text-wrap: balance; }
+  p { margin: 0; text-wrap: pretty; }
+  .wrap { max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hi); }
+  .label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+  :focus-visible { outline: 2px solid var(--nuit); outline-offset: 3px; }
+
+  /* Studio bar */
+  .studio { border-bottom: 1px solid var(--line); }
+  .studio .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; font-size: 14px; }
+  .studio b { font-weight: 600; letter-spacing: -0.02em; }
+  .studio span { color: var(--mute); }
+
+  /* Hero: always Midnight, the brand's stage */
+  .hero { background: var(--midnight); color: var(--praxeti); position: relative; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; left: -220px; bottom: -260px; width: 620px; height: 620px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 70%, #00804C 0%, #74C365 22%, #DBE64C 40%, transparent 66%); opacity: .35; filter: blur(30px); }
+  .hero .wrap { position: relative; padding-block: clamp(56px, 9vw, 112px) 0; }
+  .hero .eyebrow { color: var(--spring); }
+  .hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end; }
+  .hero h1 { font-size: clamp(64px, 13vw, 168px); letter-spacing: -0.05em; line-height: .9; margin-top: 18px; }
+  .hero .lede { margin-top: 24px; max-width: 34ch; font-size: clamp(20px, 2.4vw, 28px); line-height: 1.3; color: rgba(246,247,237,.78); letter-spacing: -0.01em; }
+  .hero-mark { width: clamp(84px, 12vw, 150px); }
+  .meta { margin-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid rgba(246,247,237,.16); }
+  .meta div { padding: 20px 20px 22px 0; min-width: 0; }
+  .meta .label { color: rgba(246,247,237,.55); }
+  .meta p { margin-top: 6px; font-size: 15px; line-height: 1.45; }
+  .hero-shot { position: relative; margin-top: clamp(32px, 5vw, 56px); }
+  .hero-shot .desk { border-radius: 18px 18px 0 0; border: 1px solid rgba(246,247,237,.14); border-bottom: 0; overflow: hidden; }
+  .hero-shot .phone { position: absolute; right: clamp(8px, 4vw, 48px); bottom: 0; width: clamp(120px, 20vw, 250px); border-radius: 30px 30px 0 0; border: 6px solid #0B1A2E; border-bottom: 0; overflow: hidden; box-shadow: 0 -20px 60px rgba(0,0,0,.35); }
+
+  /* Sections */
+  section { padding-block: clamp(64px, 9vw, 120px); }
+  section + section { border-top: 1px solid var(--line); }
+  .split { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(24px, 5vw, 72px); }
+  .split > * { min-width: 0; }
+  h2 { font-size: clamp(34px, 4.6vw, 58px); }
+  .prose p + p { margin-top: 1.1em; }
+  .prose { max-width: 62ch; font-size: clamp(17px, 1.5vw, 19px); }
+  .big { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.25; letter-spacing: -0.02em; max-width: 30ch; }
+  .big em { font-style: normal; color: var(--mute); }
+
+  /* The loop: a real sequence, so it is numbered */
+  .loop { margin-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .loop li { list-style: none; padding: 22px 20px 26px; border-right: 1px solid var(--line); min-width: 0; background: var(--surface); }
+  .loop li:last-child { border-right: 0; background: var(--spring); color: var(--midnight); }
+  .loop li:last-child .label { color: rgba(0,31,63,.6); }
+  .loop h3 { font-size: 24px; margin-top: 28px; }
+  .loop p { margin-top: 8px; font-size: 14.5px; line-height: 1.5; color: var(--mute); }
+  .loop li:last-child p { color: rgba(0,31,63,.75); }
+  ol.loop { padding: 0; margin-bottom: 0; }
+
+  /* Figures */
+  figure { margin: 0; }
+  .shot { border-radius: 18px; overflow: hidden; border: 1px solid var(--frame); background: var(--sunk); }
+  figcaption { margin-top: 12px; font-size: 14px; color: var(--mute); max-width: 70ch; }
+  .feature { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 4vw, 56px); align-items: center; margin-top: clamp(48px, 7vw, 88px); }
+  .feature > * { min-width: 0; }
+  .feature:nth-of-type(even) .feature-copy { order: 2; }
+  .feature h3 { font-size: clamp(26px, 2.8vw, 36px); }
+  .feature p { margin-top: 14px; color: var(--mute); max-width: 46ch; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .tag { font-size: 12.5px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink); }
+  .tag.open { background: var(--mantis); border-color: var(--mantis); color: var(--midnight); }
+
+  /* Palette: the brand's real proportions */
+  .palette { margin-top: clamp(36px, 5vw, 56px); display: grid; grid-template-columns: 40fr 30fr 10fr 8fr 6fr 6fr; height: 220px; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); }
+  .palette div { padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
+  .palette b { font-weight: 500; font-size: 15px; letter-spacing: -0.01em; line-height: 1.2; }
+  .palette small { font-family: var(--mono); font-size: 11px; opacity: .75; margin-top: 4px; }
+  .palette .role { font-size: 12px; opacity: .8; margin-bottom: auto; }
+  .sys { margin-top: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .sys > div { border: 1px solid var(--line); border-radius: 22px; padding: 24px; background: var(--surface); min-width: 0; }
+  .sys h3 { font-size: 22px; margin-top: 18px; }
+  .sys p { margin-top: 8px; font-size: 15px; color: var(--mute); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill { display: inline-flex; align-items: center; height: 38px; padding: 0 18px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+  .pill.a { background: var(--midnight); color: var(--spring); }
+  .pill.b { background: var(--spring); color: var(--midnight); }
+  .pill.c { border: 1px solid var(--line); }
+  .arches { display: flex; align-items: flex-end; gap: 6px; height: 76px; }
+  .arches i { flex: 1; border-radius: 999px 999px 0 0; display: block; }
+  .type-sample { font-size: 44px; letter-spacing: -0.04em; line-height: 1; }
+  .type-sample span { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; display: block; margin-top: 10px; color: var(--mute); text-transform: uppercase; }
+
+  .duo { margin-top: clamp(36px, 5vw, 56px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+  /* Phones */
+  .phones { margin-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 24px); }
+  .phones figure { min-width: 0; }
+  .phones .frame { border-radius: 28px; overflow: hidden; border: 6px solid #0B1A2E; background: #0B1A2E; }
+  .bps { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .bp { font-family: var(--mono); font-size: 12px; padding: 7px 12px; border-radius: 999px; background: var(--sunk); }
+
+  /* Scope figures: facts about what was built */
+  .facts { margin-top: clamp(36px, 5vw, 56px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .facts div { padding: 24px; border-right: 1px solid var(--line); min-width: 0; background: var(--surface); }
+  .facts div:last-child { border-right: 0; }
+  .facts b { display: block; font-family: var(--display); font-weight: 500; font-size: clamp(40px, 5vw, 64px); letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .facts span { display: block; margin-top: 10px; font-size: 14px; color: var(--mute); }
+
+  .craft { margin-top: clamp(32px, 5vw, 48px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 48px; }
+  .craft > div { padding-block: 22px; border-top: 1px solid var(--line); min-width: 0; }
+  .craft h3 { font-size: 20px; letter-spacing: -0.02em; }
+  .craft p { margin-top: 6px; font-size: 15.5px; color: var(--mute); }
+
+  .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .stack span { font-family: var(--mono); font-size: 13px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); }
+
+  /* Closing */
+  .closing { background: var(--spring); color: var(--midnight); border-top: 0 !important; position: relative; overflow: hidden; }
+  .closing .wrap { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: end; }
+  .closing h2 { font-size: clamp(40px, 6vw, 84px); letter-spacing: -0.045em; }
+  .closing h2 span { color: var(--green); }
+  .closing p { margin-top: 20px; max-width: 46ch; font-size: 18px; color: rgba(0,31,63,.8); }
+  .closing .label { color: rgba(0,31,63,.6); }
+  .credits { display: grid; gap: 14px; font-size: 15px; }
+  .credits div { border-top: 1px solid rgba(0,31,63,.2); padding-top: 12px; }
+  .credits b { display: block; font-weight: 500; }
+  footer { background: var(--midnight); color: rgba(246,247,237,.7); font-size: 13px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-block: 22px; }
+
+  @media (max-width: 900px) {
+    .split, .feature, .closing .wrap { grid-template-columns: minmax(0, 1fr); }
+    .feature:nth-of-type(even) .feature-copy { order: 0; }
+    .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .loop { grid-template-columns: minmax(0, 1fr); }
+    .loop li { border-right: 0; border-bottom: 1px solid var(--line); }
+    .loop li:last-child { border-bottom: 0; }
+    .loop h3 { margin-top: 10px; }
+    .sys { grid-template-columns: minmax(0, 1fr); }
+    .phones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts div:nth-child(2) { border-right: 0; }
+    .facts div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .craft { grid-template-columns: minmax(0, 1fr); }
+    .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); height: auto; }
+    .palette div { min-height: 110px; }
+  }
+  @media (max-width: 560px) {
+    .hero-top { grid-template-columns: minmax(0, 1fr); }
+    .hero-mark { display: none; }
+    .duo { grid-template-columns: minmax(0, 1fr); }
+    .hero-shot .phone { width: 34vw; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero h1 { animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+    .hero .lede { animation: rise .9s .12s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes rise { from { transform: translateY(18px); opacity: .001; } to { transform: none; opacity: 1; } }
+  }
+</style>
+
+<header class="studio">
+  <div class="wrap"><b>Dsquare Studio</b><span>Selected work · Case study</span></div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">Product design · Brand application · Prototype</div>
+        <h1>MAKVO</h1>
+        <p class="lede">A professional network where people are discovered through the work they make, and get hired for it.</p>
+      </div>
+      <img class="hero-mark" src="images/makvo-mark-reversed.svg" width="150" height="147" alt="">
+    </div>
+    <div class="meta">
+      <div><div class="label">Client</div><p>MAKVO</p></div>
+      <div><div class="label">Studio</div><p>Dsquare Studio</p></div>
+      <div><div class="label">Our role</div><p>Product strategy, UX and UI design, brand application, front-end prototype</p></div>
+      <div><div class="label">Platform</div><p>Responsive web app for desktop, tablet and phone</p></div>
+    </div>
+    <div class="hero-shot">
+      <img class="desk" src="images/home-dark.jpg" width="2000" height="1250" alt="MAKVO website on desktop in dark mode: the headline 'Discover people who build things' beside two portraits framed in the brand's arch shapes.">
+      <img class="phone" src="images/m-home-dark.jpg" width="780" height="1688" alt="The same MAKVO home page on a phone in dark mode.">
+    </div>
+  </div>
+</div>
+
+<main>
+  <section>
+    <div class="wrap split">
+      <div><div class="eyebrow">Overview</div></div>
+      <div>
+        <p class="big">A CV says what you did. <em>Your work shows how you think.</em> MAKVO is built on that idea.</p>
+        <div class="prose" style="margin-top:32px">
+          <p>MAKVO is a home for designers, developers, studios and the founders who hire them. It brings together things that usually live in separate tools: a portfolio, a professional network, a project marketplace, video interviews and a shared workspace for the project itself.</p>
+          <p>Dsquare designed the product experience end to end and built a high-fidelity, fully clickable prototype to test the idea before any backend work. Every major flow works, from browsing a case study to hiring its author, interviewing them and running the project.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div><div class="eyebrow">The challenge</div><h2 style="margin-top:16px">Hiring is split across too many tools.</h2></div>
+      <div class="prose">
+        <p>Creative professionals keep their best work on portfolio sites, their reputation on social networks and their contracts on freelance marketplaces. Clients judge talent from keyword-matched CVs, then move to email, a video app and a project tool to actually work together.</p>
+        <p>Each handoff loses context. A great case study rarely leads straight to a conversation, and a finished project rarely comes back as proof of what someone can do. Most marketplaces also look the same: dense dashboards of cards that treat people as listings.</p>
+        <p>The brief was to connect all of it into one calm, premium product that designers and developers would actually want to be seen on.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="eyebrow">The idea</div>
+      <h2 style="margin-top:16px; max-width:18ch">Every piece of work leads somewhere.</h2>
+      <ol class="loop">
+        <li><div class="label">01</div><h3>Person</h3><p>A profile built from finished, verified work, not a résumé.</p></li>
+        <li><div class="label">02</div><h3>Work</h3><p>Case studies credit everyone who made them, with real outcomes.</p></li>
+        <li><div class="label">03</div><h3>Connection</h3><p>Follow, connect and message straight from the work you like.</p></li>
+        <li><div class="label">04</div><h3>Opportunity</h3><p>Briefs matched to portfolios, with interviews built in.</p></li>
+        <li><div class="label">05</div><h3>Project</h3><p>A shared workspace that ends as verified portfolio work.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="eyebrow">What we designed</div>
+      <h2 style="margin-top:16px; max-width:20ch">Eighteen product areas, one connected flow.</h2>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>Discovery that starts with the work</h3>
+          <p>An editorial feed of finished projects, filterable by craft, technology, industry and style. Every project links to the people who made it, with a clear route to hire them.</p>
+          <div class="tags"><span class="tag">Discover</span><span class="tag">Case studies</span><span class="tag">Search ⌘K</span></div>
+        </div>
+        <figure><img class="shot" src="images/discover-light.jpg" width="2000" height="1250" alt="Discover page in light mode with category pills, filter dropdowns and a featured Finora project."></figure>
+      </div>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>Profiles people are proud to share</h3>
+          <p>A portfolio-first profile with services and starting prices, Work DNA (style, industries, strengths), experience and verified reviews. Availability is always visible, and Mantis green always means open to work.</p>
+          <div class="tags"><span class="tag open">Open to work</span><span class="tag">Work DNA</span><span class="tag">Services</span></div>
+        </div>
+        <figure><img class="shot" src="images/profile-light.jpg" width="2000" height="1250" alt="Varun Sharma's profile: a team photo banner, round portrait with a green open-to-work ring, and a panel with his project range and contact buttons."></figure>
+      </div>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>Opportunities with thoughtful applications</h3>
+          <p>Briefs show budget, timeline, deliverables and references, plus people recommended for the project. Applying is a four-step flow: pick relevant work, explain your approach, set a price against the client's budget and preview what the client will see.</p>
+          <div class="tags"><span class="tag">Match score</span><span class="tag">Apply</span><span class="tag">Ask a question</span></div>
+        </div>
+        <figure><img class="shot" src="images/job-light.jpg" width="2000" height="1250" alt="SaaS Website Redesign brief from Northwind Analytics with budget, timeline, location and a 92 percent match panel."></figure>
+      </div>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>Conversations that turn into projects</h3>
+          <p>Messaging sits next to the work. From any conversation you can share a project, invite someone to an interview, create a project workspace or hire, without leaving the thread. A docked chat follows you around the app.</p>
+          <div class="tags"><span class="tag">Create project</span><span class="tag">Invite to interview</span><span class="tag">Hire</span></div>
+        </div>
+        <figure><img class="shot" src="images/messages-light.jpg" width="2000" height="1250" alt="Messages view with a conversation list, a thread with a shared Finora case study, and a context panel showing the linked project."></figure>
+      </div>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>A workspace that ends in proof</h3>
+          <p>After hiring, the team gets tasks, files, meetings, milestones and payments in one place. When the project ships, the client confirms it and it becomes a Verified project on everyone's profile.</p>
+          <div class="tags"><span class="tag">Milestones</span><span class="tag">Payments</span><span class="tag">Verified projects</span></div>
+        </div>
+        <figure><img class="shot" src="images/workspace-light.jpg" width="2000" height="1250" alt="Finora Website project workspace showing 68 percent progress, a deadline of 24 October and recent team activity."></figure>
+      </div>
+
+      <div class="feature">
+        <div class="feature-copy">
+          <h3>Dashboards for both sides</h3>
+          <p>Creators see earnings, applications, profile views and their availability. Clients see applicants, shortlists, interviews, payments and talent recommendations. One switch moves between the two views.</p>
+          <div class="tags"><span class="tag">Creator</span><span class="tag">Client</span><span class="tag">Teams</span></div>
+        </div>
+        <figure><img class="shot" src="images/dashboard-dark.jpg" width="2000" height="1250" alt="Creator dashboard in dark mode: monthly earnings, active projects, applications, profile views and an earnings chart."></figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div><div class="eyebrow">Design system</div><h2 style="margin-top:16px">Applying the Spring palette.</h2></div>
+      <div class="prose">
+        <p>We applied MAKVO's brand identity across the whole product and turned it into a working design system. Each colour has one job, so meaning stays consistent everywhere: Spring for the primary action, Mantis for open to work, Picture Book Green for hired and success, and Nuit Blanche for links and information.</p>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="palette" role="img" aria-label="MAKVO palette in brand proportions: Midnight 40, Praxeti 30, Spring 10, Mantis 8, Green 6, Nuit Blanche 6.">
+        <div style="background:#001F3F;color:#F6F7ED"><span class="role">Ground, dark</span><b>Midnight Mirage</b><small>#001F3F · 40</small></div>
+        <div style="background:#F6F7ED;color:#001F3F"><span class="role">Ground, light</span><b>Praxeti White</b><small>#F6F7ED · 30</small></div>
+        <div style="background:#DBE64C;color:#001F3F"><span class="role">Action</span><b>Spring</b><small>#DBE64C · 10</small></div>
+        <div style="background:#74C365;color:#001F3F"><span class="role">Open</span><b>Mantis</b><small>#74C365 · 8</small></div>
+        <div style="background:#00804C;color:#F6F7ED"><span class="role">Hired</span><b>Green</b><small>#00804C · 6</small></div>
+        <div style="background:#1E488F;color:#F6F7ED"><span class="role">Info</span><b>Nuit</b><small>#1E488F · 6</small></div>
+      </div>
+      <div class="sys">
+        <div>
+          <div class="pills"><span class="pill a">Hire Ana</span><span class="pill b">Search</span><span class="pill c">Message</span></div>
+          <h3>Pills that flip</h3>
+          <p>On Praxeti the primary action is a Midnight pill with Spring text. On Midnight it flips to a Spring pill.</p>
+        </div>
+        <div>
+          <div class="arches" aria-hidden="true"><i style="background:#1E488F;height:62%"></i><i style="background:#00804C;height:76%"></i><i style="background:#74C365;height:88%"></i><i style="background:#DBE64C;height:100%"></i></div>
+          <h3>The arch and the spark</h3>
+          <p>The logo's arches and four-point spark became a motif: portrait frames, banners and the Verified badge.</p>
+        </div>
+        <div>
+          <div class="type-sample">Aa Bb 12<span>Geist · Geist Mono</span></div>
+          <h3>Type and labels</h3>
+          <p>A clean grotesk for reading, with monospaced uppercase labels taken straight from the brand guidelines.</p>
+        </div>
+      </div>
+      <div class="duo">
+        <figure><img class="shot" src="images/profile-light.jpg" width="2000" height="1250" alt="Profile in light mode on a Praxeti White background."><figcaption>Light mode on Praxeti White.</figcaption></figure>
+        <figure><img class="shot" src="images/profile-dark.jpg" width="2000" height="1250" alt="The same profile in dark mode on Midnight Mirage."><figcaption>Dark mode on Midnight Mirage. Your choice is remembered, or it follows your device.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div><div class="eyebrow">Responsive</div><h2 style="margin-top:16px">Designed for every screen, not shrunk to fit.</h2></div>
+      <div class="prose">
+        <p>The app runs in a browser with a persistent sidebar on desktop, an icon rail on laptops and tablets, and a bottom tab bar on phones. Layouts that split into two columns on a laptop stack cleanly on a tablet, and every screen was checked for overflow, legibility and touch targets.</p>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="phones">
+        <figure><div class="frame"><img src="images/m-home-light.jpg" width="780" height="1688" alt="Home page on a phone in light mode."></div><figcaption>Home, light</figcaption></figure>
+        <figure><div class="frame"><img src="images/m-profile-light.jpg" width="780" height="1688" alt="Aiko Tanaka's profile on a phone."></div><figcaption>Profile</figcaption></figure>
+        <figure><div class="frame"><img src="images/m-messages-dark.jpg" width="780" height="1688" alt="Messages list on a phone in dark mode."></div><figcaption>Messages, dark</figcaption></figure>
+        <figure><div class="frame"><img src="images/m-dashboard-light.jpg" width="780" height="1688" alt="Creator dashboard on a phone."></div><figcaption>Dashboard</figcaption></figure>
+      </div>
+      <div class="bps"><span class="bp">375 phone</span><span class="bp">768 tablet</span><span class="bp">1024 laptop</span><span class="bp">1440 desktop</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="eyebrow">Scope of the prototype</div>
+      <h2 style="margin-top:16px; max-width:18ch">Built to be clicked, not just looked at.</h2>
+      <div class="facts">
+        <div><b>20</b><span>Working screens</span></div>
+        <div><b>18</b><span>Product areas, from discovery to dashboards</span></div>
+        <div><b>2</b><span>Themes, light and dark</span></div>
+        <div><b>4</b><span>Breakpoints checked on every page</span></div>
+      </div>
+      <div class="craft">
+        <div><h3>Realistic content throughout</h3><p>Fifteen professional profiles, ten case studies, nine briefs, five teams, live-feeling messages and reviews. No lorem ipsum anywhere.</p></div>
+        <div><h3>A preview of AI matching</h3><p>Clients describe a project in plain words and get ranked matches, each with a breakdown of industry, style, skills, budget and availability.</p></div>
+        <div><h3>Interviews in the flow</h3><p>Schedule a call, run it in a video-style room with captions, chat and private notes, then rate the candidate and decide: hire, second interview, shortlist or reject.</p></div>
+        <div><h3>Details that respect people</h3><p>Reduced-motion support, a minimum readable text size, perfectly round portraits, and themes that load without a flash.</p></div>
+      </div>
+      <div class="stack"><span>Next.js</span><span>TypeScript</span><span>Tailwind CSS</span><span>Framer Motion</span><span>Lucide icons</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split">
+      <div><div class="eyebrow">What's next</div><h2 style="margin-top:16px">From prototype to product.</h2></div>
+      <div class="prose">
+        <p>The prototype was structured so real services can slot in without a redesign: a database and authentication, payments held in milestones, real-time messaging, video interviews, file storage and matching based on portfolio content.</p>
+        <p>The next phase is testing the core loop with designers, developers and studios, then building the backend behind the screens that work best.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <div>
+        <div class="label">MAKVO · @makvo</div>
+        <h2 style="margin-top:18px">Show the work.<br><span>Get hired.</span></h2>
+        <p>A product designed and prototyped by Dsquare Studio for people who build digital things.</p>
+      </div>
+      <div class="credits">
+        <div><span class="label">Studio</span><b>Dsquare Studio</b></div>
+        <div><span class="label">Disciplines</span><b>Product strategy · UX and UI · Brand application · Front-end</b></div>
+        <div><span class="label">Deliverable</span><b>High-fidelity responsive prototype</b></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>Dsquare Studio · Case study: MAKVO</span><span>Product names, people and projects shown in the prototype are fictional. Photography: Unsplash.</span></div>
+</footer>

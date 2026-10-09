@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, MotionGlobalConfig, motion } from "framer-motion";
 import { Bell, Briefcase, Trophy, Compass, FolderKanban, Home, LayoutDashboard, MessageSquare, Network, Rss, Search, Sparkles, User, UsersRound, Video } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BRAND } from "@/lib/brand";
@@ -15,6 +15,10 @@ import { SearchOverlay } from "./SearchOverlay";
 import { Cursor } from "./Cursor";
 import { MessageDock } from "./MessageDock";
 import { ThemeSwitch, ThemeToggle } from "./ThemeToggle";
+import { useAuth } from "@/lib/auth/context";
+import { signOut } from "@/lib/auth/actions";
+import { isAuthScreen } from "@/lib/auth/routes";
+import { LogOut } from "lucide-react";
 import { Magnetic } from "@/components/ui/Magnetic";
 
 /** MAKVO logo. Midnight version on light grounds, reversed (Praxeti + Spring spark) on Midnight. */
@@ -45,6 +49,7 @@ const NAV = [
 function TopNav() {
   const path = usePathname();
   const { setSearchOpen } = useApp();
+  const { user } = useAuth();
   return (
     <header className="sticky top-0 z-40 hidden border-b border-line bg-paper/90 backdrop-blur-md md:block">
       <div className="container-x flex h-16 items-center justify-between">
@@ -54,7 +59,7 @@ function TopNav() {
             {NAV.map((n) => {
               const active = n.match.some((m) => path === m || path.startsWith(m + "/"));
               return (
-                <Link key={n.href} href={n.href} className={`relative whitespace-nowrap rounded-full px-2.5 py-2 text-body transition-colors lg:px-3 ${"wide" in n && n.wide ? "hidden lg:inline-block" : ""} ${active ? "text-ink" : "text-ink/75 hover:text-ink"}`}>
+                <Link key={n.href} href={n.href} className={`relative whitespace-nowrap rounded-full px-2.5 py-2 text-body transition-colors lg:px-3 ${"wide" in n && n.wide ? "hidden xl:inline-block" : ""} ${active ? "text-ink" : "text-ink/75 hover:text-ink"}`}>
                   {n.label}
                   {n.label === "Messages" && <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold text-midnight">3</span>}
                   {active && <motion.span layoutId="nav-active" className="absolute inset-x-3 -bottom-[17px] h-0.5 bg-hi" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
@@ -66,9 +71,14 @@ function TopNav() {
         <div className="flex shrink-0 items-center gap-1 lg:gap-2">
           <button onClick={() => setSearchOpen(true)} aria-label="Search" className="hidden h-9 w-9 items-center justify-center rounded-full text-ink transition hover:bg-sunk lg:inline-flex"><Search className="h-[18px] w-[18px]" /></button>
           <ThemeToggle />
-          <Notifs />
-          <Button href="/discover" size="md" className="ml-1 lg:ml-2">Open {BRAND.name}</Button>
-          <ProfileMenu />
+          {user ? (<>
+            <Notifs />
+            <Button href="/dashboard" size="md" className="ml-1 lg:ml-2">Open {BRAND.name}</Button>
+            <ProfileMenu />
+          </>) : (<>
+            <Link href="/login" className="whitespace-nowrap rounded-full px-3 py-2 text-body text-ink/80 transition hover:text-ink">Log in</Link>
+            <Button href="/signup" size="md" className="ml-1">Join {BRAND.name}</Button>
+          </>)}
         </div>
       </div>
     </header>
@@ -103,16 +113,19 @@ function Notifs() {
 
 function ProfileMenu({ side }: { side?: boolean }) {
   const { role, setRole, toast } = useApp();
-  const me = role === "creator" ? { name: "Varun Sharma", tone: "#E9C8B0", sub: "Product & Brand Designer" } : { name: "Amelia Brooks", tone: "#CFD8E6", sub: "Northwind Analytics" };
+  const { user } = useAuth();
+  const me = user
+    ? { name: user.fullName || user.email || "Your account", tone: undefined, sub: user.email ?? "", src: user.avatarUrl }
+    : role === "creator" ? { name: "Varun Sharma", tone: "#E9C8B0", sub: "Product & Brand Designer", src: null } : { name: "Amelia Brooks", tone: "#CFD8E6", sub: "Northwind Analytics", src: null };
   return (
     <Popover align={side ? "left" : "right"} up={side} width="w-72" trigger={({ toggle }) => (
-            <button onClick={toggle} aria-label="Profile menu" className="flex shrink-0 rounded-full ring-offset-2 ring-offset-paper transition hover:ring-2 hover:ring-line"><Avatar name={me.name} tone={me.tone} size={34} status="online" /></button>
+            <button onClick={toggle} aria-label="Profile menu" className="flex shrink-0 rounded-full ring-offset-2 ring-offset-paper transition hover:ring-2 hover:ring-line"><Avatar name={me.name} tone={me.tone} src={me.src} size={34} status="online" /></button>
           )}>
             {(close) => (
               <div>
-                <div className="flex items-center gap-3 border-b border-line p-4"><Avatar name={me.name} tone={me.tone} size={40} /><div><div className="text-body font-medium">{me.name}</div><div className="text-small text-mute">{me.sub}</div></div></div>
+                <div className="flex items-center gap-3 border-b border-line p-4"><Avatar name={me.name} tone={me.tone} src={me.src} size={40} /><div className="min-w-0"><div className="truncate text-body font-medium">{me.name}</div><div className="truncate text-small text-mute">{me.sub}</div></div></div>
                 <div className="p-1.5">
-                  {role === "creator" && <MenuLink href="/people/varun-sharma" close={close}>Your profile</MenuLink>}
+                  {!user && role === "creator" && <MenuLink href="/people/varun-sharma" close={close}>Your profile</MenuLink>}
                   <MenuLink href="/dashboard" close={close}>Dashboard</MenuLink>
                   <MenuLink href="/network" close={close}>Your network</MenuLink>
                   <MenuLink href="/feed" close={close}>Work feed</MenuLink>
@@ -124,13 +137,18 @@ function ProfileMenu({ side }: { side?: boolean }) {
                   <ThemeSwitch />
                 </div>
                 <div className="border-t border-line p-3">
-                  <div className="t-caption mb-2">Viewing as</div>
+                  <div className="t-caption mb-2">Preview dashboard as</div>
                   <div className="grid grid-cols-2 gap-1 rounded-full bg-sunk p-1">
                     {(["creator", "client"] as const).map((r) => (
                       <button key={r} onClick={() => { setRole(r); toast(`Switched to ${r} view`); close(); }} className={`rounded-full py-1.5 text-small font-medium capitalize transition ${role === r ? "bg-ink text-paper" : "text-mute"}`}>{r}</button>
                     ))}
                   </div>
                 </div>
+                {user && (
+                  <form action={signOut} className="border-t border-line p-1.5">
+                    <button type="submit" className="flex w-full items-center gap-2.5 rounded-xs px-3 py-2 text-left text-body text-ink transition hover:bg-sunk"><LogOut className="h-4 w-4 text-mute" />Sign out</button>
+                  </form>
+                )}
               </div>
             )}
           </Popover>
@@ -161,6 +179,7 @@ const SIDE2 = [
 function Sidebar() {
   const path = usePathname();
   const { role } = useApp();
+  const { user } = useAuth();
   const Item = ({ i }: { i: (typeof SIDE)[number] }) => {
     const on = i.match.some((m) => path === m || path.startsWith(m + "/"));
     return (
@@ -184,7 +203,14 @@ function Sidebar() {
       </nav>
       <div className="border-t border-line p-2 xl:p-3">
         <Link href="/" title="Back to home page" className="mb-1 flex items-center justify-center gap-3 rounded-full px-3 py-2 text-small text-mute transition-colors hover:bg-sunk hover:text-ink xl:justify-start"><Home className="h-4 w-4" /><span className="hidden xl:inline">Back to home page</span></Link>
-        <div className="flex items-center justify-center gap-2 rounded-sm px-1 py-1 xl:justify-start"><ProfileMenu side /><div className="hidden min-w-0 text-small leading-tight xl:block"><div className="truncate font-medium">{role === "creator" ? "Varun Sharma" : "Amelia Brooks"}</div><div className="truncate text-mute capitalize">{role} view</div></div></div>
+        {user ? (
+          <div className="flex items-center justify-center gap-2 rounded-sm px-1 py-1 xl:justify-start"><ProfileMenu side /><div className="hidden min-w-0 text-small leading-tight xl:block"><div className="truncate font-medium">{user.fullName || user.email}</div><div className="truncate text-mute capitalize">{user.accountType ?? `${role} view`}</div></div></div>
+        ) : (
+          <div className="flex flex-col gap-1.5 px-1 py-1">
+            <Link href={`/login?next=${encodeURIComponent(path)}`} title="Sign in" className="flex h-9 items-center justify-center gap-2 rounded-full bg-btn text-small font-medium text-btn-fg transition hover:opacity-90"><User className="h-4 w-4 xl:hidden" /><span className="hidden xl:inline">Sign in</span></Link>
+            <Link href="/signup" className="hidden h-9 items-center justify-center rounded-full border border-ink/20 text-small font-medium transition hover:border-ink xl:flex">Create account</Link>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -192,18 +218,21 @@ function Sidebar() {
 
 function AppTopbar() {
   const { setSearchOpen } = useApp();
+  const { user } = useAuth();
+  const path = usePathname();
   return (
     <header className="sticky top-0 z-30 hidden h-16 items-center justify-between gap-4 border-b border-line bg-paper/85 px-8 backdrop-blur-md md:flex">
       <button onClick={() => setSearchOpen(true)} className="flex h-9 w-full max-w-md items-center gap-2 rounded-full border border-line bg-surface px-4 text-small text-mute transition hover:border-ink">
         <Search className="h-4 w-4" /><span>Search people, projects, jobs…</span><kbd className="ml-auto rounded-xs border border-line px-1.5 py-0.5 font-mono text-[11px]">⌘K</kbd>
       </button>
-      <div className="flex items-center gap-2"><Button href="/talent" size="sm" variant="outline">Find talent</Button><ThemeToggle /><Notifs /></div>
+      <div className="flex items-center gap-2">{user ? <><Button href="/talent" size="sm" variant="outline">Find talent</Button><ThemeToggle /><Notifs /></> : <><ThemeToggle /><Link href={`/login?next=${encodeURIComponent(path)}`} className="rounded-full px-3 py-1.5 text-small text-ink/80 transition hover:text-ink">Log in</Link><Button href="/signup" size="sm">Join {BRAND.name}</Button></>}</div>
     </header>
   );
 }
 
 function MobileTop() {
   const { setSearchOpen } = useApp();
+  const { user } = useAuth();
   const unread = NOTIFICATIONS.filter((n) => n.unread).length;
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-paper/90 px-5 backdrop-blur-md md:hidden">
@@ -211,7 +240,11 @@ function MobileTop() {
       <div className="flex items-center gap-1">
         <ThemeToggle className="!h-10 !w-10" />
         <button onClick={() => setSearchOpen(true)} aria-label="Search" className="inline-flex h-10 w-10 items-center justify-center rounded-full active:bg-sunk"><Search className="h-5 w-5" /></button>
-        <Link href="/notifications" aria-label="Notifications" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full active:bg-sunk"><Bell className="h-5 w-5" />{unread > 0 && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-hi" />}</Link>
+        {user ? (
+          <Link href="/notifications" aria-label="Notifications" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full active:bg-sunk"><Bell className="h-5 w-5" />{unread > 0 && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-hi" />}</Link>
+        ) : (
+          <Link href="/login" className="ml-1 inline-flex h-9 items-center rounded-full bg-btn px-4 text-small font-medium text-btn-fg">Log in</Link>
+        )}
       </div>
     </header>
   );
@@ -267,11 +300,16 @@ function Footer() {
   );
 }
 
+// `?capture` in the URL finishes every animation instantly, for clean screenshots.
+if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("capture")) MotionGlobalConfig.skipAnimations = true;
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const landing = path === "/";
+  const { user } = useAuth();
+  if (isAuthScreen(path)) return <MotionConfig reducedMotion="user">{children}<Toasts /></MotionConfig>;
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       {landing ? (
         <div className="min-h-dvh">
           <TopNav /><MobileTop />
@@ -288,7 +326,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </>
       )}
       <BottomNav />
-      <SearchOverlay /><Toasts /><Cursor /><MessageDock />
-    </>
+      <SearchOverlay /><Toasts /><Cursor />{user && <MessageDock />}
+    </MotionConfig>
   );
 }

@@ -3,13 +3,18 @@
 A high-fidelity, fully clickable frontend prototype of a professional network where people are
 discovered through the work they make. Discover → Connect → Hire → Build.
 
-No backend. Everything runs on realistic mock data and in-memory state.
+Product content runs on realistic mock data and in-memory state. Authentication is real (Supabase).
 
 ```bash
 npm install
+cp .env.example .env.local   # add your Supabase URL + anon key (see docs/AUTH.md)
 npm run dev      # http://localhost:3000
 npm run build    # production build
 ```
+
+**Accounts:** sign-in uses Supabase Auth (email + password, Google). Setup steps, the database migration and the
+Google OAuth configuration are in [`docs/AUTH.md`](docs/AUTH.md). Without Supabase configured, public pages work and
+every private page redirects to a login screen that explains setup is needed.
 
 **Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS · Framer Motion · Lucide · Geist
 

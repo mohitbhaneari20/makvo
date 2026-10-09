@@ -78,6 +78,10 @@ body {
   .grad-midnight { background-image: linear-gradient(160deg, #001F3F 30%, #1E488F 100%); }
   .grad-glow { background-image: radial-gradient(circle at 0% 100%, #00804C 0%, #74C365 18%, #DBE64C 34%, transparent 62%); }
 
+  .auth-input {
+    @apply h-12 w-full rounded-full border border-line bg-surface px-5 text-body text-ink outline-none transition-[border-color,box-shadow]
+           placeholder:text-faint hover:border-ink/30 focus:border-ink focus:ring-4 focus:ring-nuit/15;
+  }
   .container-x { @apply mx-auto w-full max-w-[1360px] px-5 md:px-8 lg:px-10; }
   .hairline { @apply border-line; border-width: 1px; }
   .field {

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/lib/auth/context";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Eye } from "lucide-react";
 import { useApp } from "@/lib/store";
@@ -59,6 +60,11 @@ const Panel = ({ title, action, children }: { title: string; action?: React.Reac
 
 export default function Dashboard() {
   const { role, setRole, applications, interviews, convos, decisions, decide, toast, workspaces } = useApp();
+  const { user } = useAuth();
+  const firstName = user?.fullName?.split(" ")[0];
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("password") === "updated") { toast("Password updated"); window.history.replaceState(null, "", "/dashboard"); }
+  }, [toast]);
   const [tab, setTab] = useState<string>("Overview");
   const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
   const [avail, setAvail] = useState<Availability>("Available");
@@ -75,7 +81,7 @@ export default function Dashboard() {
   return (
     <div className="container-x pt-10 md:pt-16">
       <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-        <div><div className="t-caption mb-3">{role === "creator" ? "Creator dashboard" : "Client dashboard"}</div><h1 className="t-h1">{role === "creator" ? "Good morning, Varun." : "Good morning, Amelia."}</h1><p className="mt-3 text-body text-mute">{role === "creator" ? `You have ${unread} unread messages, 1 interview this week and 3 new briefs that match.` : `${applicants.length} people applied to your open brief. 2 interviews this week.`}</p></div>
+        <div><div className="t-caption mb-3">{role === "creator" ? "Creator dashboard" : "Client dashboard"}</div><h1 className="t-h1">{firstName ? `Good morning, ${firstName}.` : role === "creator" ? "Good morning, Varun." : "Good morning, Amelia."}</h1><p className="mt-3 text-body text-mute">{role === "creator" ? `You have ${unread} unread messages, 1 interview this week and 3 new briefs that match.` : `${applicants.length} people applied to your open brief. 2 interviews this week.`}</p></div>
         <div className="inline-flex rounded-full bg-sunk p-1">{(["creator", "client"] as const).map((r) => <button key={r} onClick={() => switchRole(r)} className={`relative rounded-full px-4 py-1.5 text-small font-medium capitalize ${role === r ? "text-paper" : "text-mute"}`}>{role === r && <motion.span layoutId="dash-role" className="absolute inset-0 rounded-full bg-ink" />}<span className="relative">{r}</span></button>)}</div>
       </div>
 

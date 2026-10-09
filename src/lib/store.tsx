@@ -67,8 +67,8 @@ export const useApp = () => {
 const toggle = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
 const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [s, setS] = useState<State>(initial);
+export function AppProvider({ children, initialRole = "creator" }: { children: React.ReactNode; initialRole?: Role }) {
+  const [s, setS] = useState<State>(() => ({ ...initial, role: initialRole }));
   const patch = useCallback((f: (s: State) => Partial<State>) => setS((p) => ({ ...p, ...f(p) })), []);
 
   const toast = useCallback((text: string, tone: Toast["tone"] = "default") => {

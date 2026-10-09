@@ -15,17 +15,17 @@ const PAIRS: [string, string][] = [
 const pairFor = (name: string) => PAIRS[[...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % PAIRS.length];
 
 // `tone` is accepted for API compatibility; colours come from the brand palette.
-export function Avatar({ name, size = 40, status, className = "", square }: { name: string; tone?: string; size?: number; status?: "online" | "away" | "offline"; className?: string; square?: boolean }) {
+export function Avatar({ name, size = 40, status, className = "", square, src }: { name: string; tone?: string; size?: number; status?: "online" | "away" | "offline"; className?: string; square?: boolean; src?: string | null }) {
   const [bg, fg] = pairFor(name);
   const [failed, setFailed] = useState(false);
-  const photo = !square && !failed ? portraitFor(name, Math.max(96, Math.min(480, Math.round(size * 2.5)))) : null;
+  const photo = !square && !failed ? (src || portraitFor(name, Math.max(96, Math.min(480, Math.round(size * 2.5))))) : null;
   return (
     <span className={`relative flex aspect-square shrink-0 grow-0 items-center justify-center font-semibold leading-none tracking-tight ${square ? "rounded-[28%]" : "rounded-full"} ${!photo && bg === "#001F3F" ? "ring-1 ring-inset ring-praxeti/20" : ""} ${className}`}
       style={{ width: size, height: size, minWidth: size, minHeight: size, background: photo ? "rgb(var(--sunk))" : bg, color: fg, fontSize: Math.max(10, size * 0.36) }} aria-label={name}>
       {photo ? (
         <span className="absolute inset-0 overflow-hidden rounded-full">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photo} alt={name} width={size} height={size} loading="lazy" draggable={false} onError={() => setFailed(true)} className="block h-full w-full max-w-none object-cover object-center" />
+          <img src={photo} alt={name} width={size} height={size} loading="lazy" draggable={false} referrerPolicy="no-referrer" onError={() => setFailed(true)} className="block h-full w-full max-w-none object-cover object-center" />
         </span>
       ) : initials(name)}
       {status && (

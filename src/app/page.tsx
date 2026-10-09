@@ -110,15 +110,13 @@ export default function Landing() {
       <section className="container-x mt-24 md:mt-40">
         <SectionHead eyebrow="How it works" title="Discover, connect, hire, build." />
         <div className="mt-12 grid border-y border-line md:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.n} delay={i * 0.07}>
-              <Link href={s.href} className="group relative flex h-full flex-col justify-between gap-8 border-b border-line p-6 transition-colors last:border-b-0 hover:bg-surface md:gap-16 md:border-b-0 md:border-r md:last:border-r-0 md:p-8">
+          {STEPS.map((s) => (
+            <Reveal key={s.n} className="h-full border-b border-line last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
+              <Link href={s.href} className="group flex h-full flex-col p-6 transition-colors hover:bg-surface md:p-8">
                 <div className="flex items-start justify-between"><span className="font-mono text-small text-mute">{s.n}</span><s.icon className="h-5 w-5 text-mute transition-colors group-hover:text-hi" strokeWidth={1.5} /></div>
-                <div>
-                  <h3 className="text-[2rem] font-medium leading-none tracking-[-0.03em] md:text-[2.6rem]">{s.t}</h3>
-                  <p className="mt-3 text-body text-mute">{s.d}</p>
-                  <span className="mt-6 inline-flex items-center gap-1.5 text-small font-medium">{s.cta}<ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" /></span>
-                </div>
+                <h3 className="mt-10 text-[2rem] font-medium leading-none tracking-[-0.03em] md:mt-16 md:text-[2.6rem]">{s.t}</h3>
+                <p className="mt-3 text-body text-mute">{s.d}</p>
+                <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-small font-medium">{s.cta}<ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" /></span>
               </Link>
             </Reveal>
           ))}
