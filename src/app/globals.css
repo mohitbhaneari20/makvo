@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* MAKVO · Spring palette. Light app = Praxeti ground, Midnight ink. */
+  --paper: 246 247 237;      /* Praxeti White */
+  --surface: 255 255 251;
+  --sunk: 234 237 222;
+  --ink: 0 31 63;            /* Midnight Mirage */
+  --mute: 72 92 114;
+  --faint: 136 149 162;
+  --line: 219 223 207;
+  --accent: 219 230 76;      /* First Colors of Spring: the spark, primary action */
+  --accent-ink: 0 31 63;
+  --hi: 0 128 76;            /* highlight text: Picture Book Green on light */
+  --ok: 0 128 76;
+  --btn: 0 31 63;            /* on Praxeti the primary pill is Midnight with Spring text */
+  --btn-fg: 219 230 76;
+}
+
+/* Dark mode: Midnight Mirage ground. Primary action flips to a Spring pill. */
+[data-theme="dark"], .theme-dark {
+  --paper: 0 31 63;
+  --surface: 7 42 79;
+  --sunk: 12 52 94;
+  --ink: 246 247 237;
+  --mute: 168 183 199;
+  --faint: 116 137 160;
+  --line: 28 64 102;
+  --hi: 219 230 76;
+  --btn: 219 230 76;
+  --btn-fg: 0 31 63;
+  background-color: rgb(var(--paper));
+  color: rgb(var(--ink));
+}
+[data-theme="dark"] .logo-light, .theme-dark .logo-light { display: none; }
+.logo-dark { display: none; }
+[data-theme="dark"] .logo-dark, .theme-dark .logo-dark { display: block; }
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+* { -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  transition: background-color .3s ease, color .3s ease;
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+::selection { background: #DBE64C; color: #001F3F; }
+
+@layer base {
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  button { cursor: pointer; }
+  /* Grid items must be allowed to shrink, otherwise horizontal scrollers blow the layout out on mobile. */
+  .grid > * { min-width: 0; }
+  input, textarea, select { font: inherit; }
+}
+
+@layer components {
+  .t-display { @apply text-display; }
+  .t-h1 { @apply text-h1; }
+  .t-h2 { @apply text-h2; }
+  .t-h3 { @apply text-h3; }
+  .t-body { @apply text-body; }
+  .t-small { @apply text-small; }
+  .t-caption { @apply font-mono text-[11px] uppercase leading-tight tracking-[0.08em] text-mute; }
+  .t-eyebrow { @apply font-mono text-[12px] uppercase leading-tight tracking-[0.1em] text-hi; }
+
+  /* Brand gradients: always travel through the palette in order. */
+  .grad-spring { background-image: linear-gradient(135deg, #DBE64C 0%, #74C365 55%, #00804C 100%); }
+  .grad-spring-soft { background-image: linear-gradient(135deg, #DBE64C 0%, #A9D65A 50%, #74C365 100%); }
+  .grad-midnight { background-image: linear-gradient(160deg, #001F3F 30%, #1E488F 100%); }
+  .grad-glow { background-image: radial-gradient(circle at 0% 100%, #00804C 0%, #74C365 18%, #DBE64C 34%, transparent 62%); }
+
+  .container-x { @apply mx-auto w-full max-w-[1360px] px-5 md:px-8 lg:px-10; }
+  .hairline { @apply border-line; border-width: 1px; }
+  .field {
+    @apply w-full rounded-sm border border-line bg-surface px-4 py-2.5 text-body outline-none transition
+           placeholder:text-faint focus:border-ink focus:ring-4 focus:ring-nuit/10;
+  }
+  .no-scrollbar { scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .snap-row { @apply flex snap-x snap-mandatory gap-4 overflow-x-auto no-scrollbar; }
+  .snap-row > * { @apply snap-start shrink-0; }
+  .skeleton { @apply relative overflow-hidden bg-sunk; }
+  .skeleton::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / .55), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  .underline-link { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .35s cubic-bezier(.2,.7,.2,1); }
+  .underline-link:hover { background-size: 100% 1px; }
+}
+
+@media (pointer: fine) { .use-cursor, .use-cursor * { cursor: none !important; } }
+body { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Midnight surfaces need an edge when the ground is also Midnight. */
+[data-theme="dark"] .grad-midnight { box-shadow: inset 0 0 0 1px rgb(var(--line)); }
+[data-theme="dark"] .shadow-soft, [data-theme="dark"] .shadow-pop { box-shadow: 0 0 0 1px rgb(var(--line)), 0 16px 40px -16px rgb(0 0 0 / .5); }
