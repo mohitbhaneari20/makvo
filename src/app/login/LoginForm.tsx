@@ -8,7 +8,7 @@ import { GoogleButton } from "@/components/auth/GoogleButton";
 
 const initial: FormState = { status: "idle" };
 
-export function LoginForm({ next, error, signedOut, configured }: { next: string; error?: string; signedOut?: boolean; configured: boolean }) {
+export function LoginForm({ next, error, signedOut, configured, google }: { next: string; error?: string; signedOut?: boolean; configured: boolean; google: boolean }) {
   const [state, action] = useActionState(signInWithPassword, initial);
   const [resend, resendAction] = useActionState(resendConfirmation, initial);
   const linkError = error && LINK_ERRORS[error];
@@ -32,8 +32,10 @@ export function LoginForm({ next, error, signedOut, configured }: { next: string
         )}
       </div>
 
-      <div className="mt-6"><GoogleButton next={next} disabled={!configured} /></div>
-      <div className="my-6"><Divider>or continue with email</Divider></div>
+      {google ? (<>
+        <div className="mt-6"><GoogleButton next={next} disabled={!configured} /></div>
+        <div className="my-6"><Divider>or continue with email</Divider></div>
+      </>) : <div className="mt-6" />}
 
       <form action={action} noValidate className="space-y-4">
         <input type="hidden" name="next" value={next} />

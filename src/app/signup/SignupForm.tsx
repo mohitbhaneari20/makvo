@@ -26,12 +26,12 @@ function CheckEmail({ email, onBack }: { email: string; onBack: () => void }) {
   );
 }
 
-export function SignupForm({ next, initialType, configured }: { next: string; initialType: string; configured: boolean }) {
+export function SignupForm({ next, initialType, configured, google }: { next: string; initialType: string; configured: boolean; google: boolean }) {
   const [formKey, setFormKey] = useState(0);
-  return <SignupInner key={formKey} next={next} initialType={initialType} configured={configured} onReset={() => setFormKey((k) => k + 1)} />;
+  return <SignupInner key={formKey} next={next} initialType={initialType} configured={configured} google={google} onReset={() => setFormKey((k) => k + 1)} />;
 }
 
-function SignupInner({ next, initialType, configured, onReset }: { next: string; initialType: string; configured: boolean; onReset: () => void }) {
+function SignupInner({ next, initialType, configured, google, onReset }: { next: string; initialType: string; configured: boolean; google: boolean; onReset: () => void }) {
   const [state, action] = useActionState(signUp, initial);
   const [accountType, setAccountType] = useState(state.values?.accountType ?? initialType);
 
@@ -60,8 +60,10 @@ function SignupInner({ next, initialType, configured, onReset }: { next: string;
         <SubmitButton pendingLabel="Creating your account…" disabled={!configured}>Create account</SubmitButton>
       </form>
 
-      <div className="my-6"><Divider>or</Divider></div>
-      <GoogleButton next={next} accountType={accountType} label="Sign up with Google" disabled={!configured} />
+      {google && (<>
+        <div className="my-6"><Divider>or</Divider></div>
+        <GoogleButton next={next} accountType={accountType} label="Sign up with Google" disabled={!configured} />
+      </>)}
 
       <p className="mt-7 text-center text-small text-mute">Already have an account? <Link href={next !== "/dashboard" ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-medium text-ink underline-link">Sign in</Link></p>
     </div>

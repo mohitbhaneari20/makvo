@@ -21,6 +21,7 @@ export interface FormState {
 const str = (fd: FormData, key: string) => (typeof fd.get(key) === "string" ? (fd.get(key) as string) : "");
 const notConfigured: FormState = { status: "error", message: "Sign-in isn't set up yet. Add the Supabase environment variables to enable accounts." };
 import { SIGNUP_TYPE_COOKIE } from "./pending-type";
+import { getAuthProviders } from "./providers";
 
 /* ---------------- Sign in ---------------- */
 export async function signInWithPassword(_: FormState, fd: FormData): Promise<FormState> {
@@ -94,6 +95,7 @@ export async function resendConfirmation(_: FormState, fd: FormData): Promise<Fo
 export async function signInWithGoogle(fd: FormData) {
   const next = safeNext(str(fd, "next"));
   if (!isSupabaseConfigured()) redirect(`${LOGIN_PATH}?error=not_configured`);
+  if (!(await getAuthProviders()).google) redirect(`${LOGIN_PATH}?error=oauth_failed`);
   const accountType = str(fd, "accountType");
   if (isAccountType(accountType)) {
     // Remember the choice from the sign-up page; the callback applies it only if the profile has no type yet.
