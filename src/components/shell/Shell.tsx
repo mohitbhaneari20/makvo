@@ -125,7 +125,7 @@ function ProfileMenu({ side }: { side?: boolean }) {
               <div>
                 <div className="flex items-center gap-3 border-b border-line p-4"><Avatar name={me.name} tone={me.tone} src={me.src} size={40} /><div className="min-w-0"><div className="truncate text-body font-medium">{me.name}</div><div className="truncate text-small text-mute">{me.sub}</div></div></div>
                 <div className="p-1.5">
-                  {!user && role === "creator" && <MenuLink href="/people/varun-sharma" close={close}>Your profile</MenuLink>}
+                  {user ? <MenuLink href="/profile" close={close}>Your profile</MenuLink> : role === "creator" && <MenuLink href="/people/varun-sharma" close={close}>Your profile</MenuLink>}
                   <MenuLink href="/dashboard" close={close}>Dashboard</MenuLink>
                   <MenuLink href="/network" close={close}>Your network</MenuLink>
                   <MenuLink href="/feed" close={close}>Work feed</MenuLink>
@@ -167,7 +167,7 @@ const SIDE = [
   { label: "People", href: "/people", icon: UsersRound, match: ["/people", "/teams"] },
   { label: "Opportunities", href: "/opportunities", icon: Briefcase, match: ["/opportunities"] },
   { label: "Awards", href: "/awards", icon: Trophy, match: ["/awards"] },
-  { label: "Messages", href: "/messages", icon: MessageSquare, match: ["/messages"], badge: 3 },
+  { label: "Messages", href: "/messages", icon: MessageSquare, match: ["/messages"], badge: 0 },
 ];
 const SIDE2 = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, match: ["/dashboard"] },
@@ -178,9 +178,12 @@ const SIDE2 = [
 
 function Sidebar() {
   const path = usePathname();
-  const { role } = useApp();
+  const { role, convos } = useApp();
   const { user } = useAuth();
-  const Item = ({ i }: { i: (typeof SIDE)[number] }) => {
+  const unread = convos.reduce((a, c) => a + c.unread, 0);
+  const side = SIDE.map((i) => (i.href === "/messages" ? { ...i, badge: unread } : i));
+  const side2 = user ? [{ label: "Your profile", href: "/profile", icon: User, match: ["/profile"] }, ...SIDE2] : SIDE2;
+  const Item = ({ i }: { i: (typeof SIDE)[number] | (typeof SIDE2)[number] }) => {
     const on = i.match.some((m) => path === m || path.startsWith(m + "/"));
     return (
       <Link href={i.href} title={i.label} className={`relative flex items-center justify-center gap-3 rounded-full px-3 py-2 text-body transition-colors xl:justify-start ${on ? "bg-btn font-medium text-btn-fg" : "text-mute hover:bg-sunk hover:text-ink"}`}>
@@ -194,8 +197,8 @@ function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-16 flex-col xl:w-60 border-r border-line bg-paper md:flex">
       <div className="flex h-16 items-center justify-center xl:justify-start xl:px-5"><span className="xl:hidden"><Logo markOnly height={26} /></span><span className="hidden xl:block"><Logo height={22} /></span></div>
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2" aria-label="Primary">
-        <div className="space-y-0.5">{SIDE.map((i) => <Item key={i.href} i={i} />)}</div>
-        <div><div className="t-caption mb-2 hidden px-3 xl:block">Workspace</div><div className="mx-3 mb-2 hidden h-px bg-line md:block xl:hidden" /><div className="space-y-0.5">{SIDE2.map((i) => <Item key={i.href} i={i} />)}</div></div>
+        <div className="space-y-0.5">{side.map((i) => <Item key={i.href} i={i} />)}</div>
+        <div><div className="t-caption mb-2 hidden px-3 xl:block">Workspace</div><div className="mx-3 mb-2 hidden h-px bg-line md:block xl:hidden" /><div className="space-y-0.5">{side2.map((i) => <Item key={i.href} i={i} />)}</div></div>
         <div><div className="t-caption mb-2 hidden px-3 xl:block">Your team</div><div className="mx-3 mb-2 hidden h-px bg-line md:block xl:hidden" />
           <Link href="/teams/studio-north" title="Studio North" className="flex items-center justify-center gap-3 rounded-full px-3 py-2 text-body text-mute transition-colors hover:bg-sunk hover:text-ink xl:justify-start"><span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-forest text-[8px] font-semibold text-praxeti">SN</span><span className="hidden xl:inline">Studio North</span></Link>
           <Link href="/projects/finora-website" title="Finora Website" className="flex items-center justify-center gap-3 rounded-full px-3 py-2 text-body text-mute transition-colors hover:bg-sunk hover:text-ink xl:justify-start"><span className="h-[18px] w-[18px] rounded-full grad-spring" /><span className="hidden xl:inline">Finora Website</span></Link>
@@ -260,22 +263,26 @@ const TABS = [
 
 function BottomNav() {
   const path = usePathname();
+  const { user } = useAuth();
+  const { convos } = useApp();
+  const unread = convos.some((c) => c.unread > 0);
+  const tabs = TABS.map((t) => (t.label === "Profile" && user ? { ...t, href: "/profile", match: ["/profile"] } : t));
   const activeIdx = (() => {
-    const exact = TABS.findIndex((t) => t.match.some((m) => m !== "/" && (path === m || path.startsWith(m + "/")) && t.label === "Profile"));
+    const exact = tabs.findIndex((t) => t.match.some((m) => m !== "/" && (path === m || path.startsWith(m + "/")) && t.label === "Profile"));
     if (exact >= 0) return exact;
-    return TABS.findIndex((t) => t.match.some((m) => (m === "/" ? path === "/" : path === m || path.startsWith(m + "/"))));
+    return tabs.findIndex((t) => t.match.some((m) => (m === "/" ? path === "/" : path === m || path.startsWith(m + "/"))));
   })();
   return (
     <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden">
       <ul className="grid grid-cols-5">
-        {TABS.map((t, i) => {
+        {tabs.map((t, i) => {
           const Icon = t.icon; const on = i === activeIdx;
           return (
             <li key={t.label}>
               <Link href={t.href} className={`relative flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors ${on ? "text-ink" : "text-mute"}`}>
                 <span className="relative flex h-8 w-14 items-center justify-center">
                   {on && <motion.span layoutId="tab-pill" className="absolute inset-0 rounded-full bg-spring" transition={{ type: "spring", stiffness: 500, damping: 38 }} />}
-                  <Icon className={`relative h-[21px] w-[21px] ${on ? "text-midnight" : ""}`} strokeWidth={on ? 2.2 : 1.7} />{t.label === "Messages" && <span className="absolute right-3 top-0.5 h-2 w-2 rounded-full bg-forest ring-2 ring-paper" />}</span>
+                  <Icon className={`relative h-[21px] w-[21px] ${on ? "text-midnight" : ""}`} strokeWidth={on ? 2.2 : 1.7} />{t.label === "Messages" && unread && <span className="absolute right-3 top-0.5 h-2 w-2 rounded-full bg-forest ring-2 ring-paper" />}</span>
                 {t.label}
               </Link>
             </li>

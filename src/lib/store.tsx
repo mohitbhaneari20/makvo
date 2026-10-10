@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { CONVERSATIONS } from "@/data/social";
+import { CONVERSATIONS, welcomeInbox } from "@/data/social";
 import type { Conversation, Message } from "@/data/types";
 import { BRAND } from "@/lib/brand";
 import { WORKSPACE } from "@/data/workspace";
@@ -67,8 +67,11 @@ export const useApp = () => {
 const toggle = (arr: string[], id: string) => (arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id]);
 const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-export function AppProvider({ children, initialRole = "creator" }: { children: React.ReactNode; initialRole?: Role }) {
-  const [s, setS] = useState<State>(() => ({ ...initial, role: initialRole }));
+/** A signed-in member, used to give them their own inbox instead of the demo account's conversations. */
+export interface Member { firstName: string | null; accountType: string | null }
+
+export function AppProvider({ children, initialRole = "creator", member }: { children: React.ReactNode; initialRole?: Role; member?: Member | null }) {
+  const [s, setS] = useState<State>(() => ({ ...initial, role: initialRole, convos: member ? welcomeInbox(member.firstName, member.accountType) : initial.convos }));
   const patch = useCallback((f: (s: State) => Partial<State>) => setS((p) => ({ ...p, ...f(p) })), []);
 
   const toast = useCallback((text: string, tone: Toast["tone"] = "default") => {

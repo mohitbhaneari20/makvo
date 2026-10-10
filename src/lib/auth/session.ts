@@ -13,6 +13,7 @@ export interface SessionUser {
   onboardingCompleted: boolean;
   headline: string | null;
   organization: string | null;
+  memberSince: string | null;
 }
 
 /** The signed-in user and their profile, verified with Supabase Auth. Cached for the duration of one request. */
@@ -23,7 +24,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   if (!user) return null;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url, account_type, onboarding_completed, headline, organization")
+    .select("full_name, avatar_url, account_type, onboarding_completed, headline, organization, created_at")
     .eq("id", user.id)
     .maybeSingle();
   const meta = user.user_metadata ?? {};
@@ -36,5 +37,6 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     onboardingCompleted: Boolean(profile?.onboarding_completed),
     headline: profile?.headline ?? null,
     organization: profile?.organization ?? null,
+    memberSince: profile?.created_at ?? user.created_at ?? null,
   };
 });

@@ -184,3 +184,32 @@ export async function completeOnboarding(_: FormState, fd: FormData): Promise<Fo
   revalidatePath("/", "layout");
   redirect(safeNext(str(fd, "next"), DEFAULT_APP_PATH));
 }
+
+/* ---------------- Edit profile ---------------- */
+export async function updateProfile(_: FormState, fd: FormData): Promise<FormState> {
+  if (!isSupabaseConfigured()) return notConfigured;
+  const accountType = str(fd, "accountType");
+  const fullName = str(fd, "fullName").trim().replace(/\s+/g, " ");
+  const headline = str(fd, "headline").trim().slice(0, 140) || null;
+  const organization = str(fd, "organization").trim().slice(0, 120) || null;
+  const values = { fullName, headline: headline ?? "", organization: organization ?? "", accountType };
+  const fieldErrors: FieldErrors = {};
+  if (!isAccountType(accountType)) fieldErrors.accountType = "Choose what brings you to MAKVO.";
+  const n = validateFullName(fullName); if (n) fieldErrors.fullName = n;
+  if (Object.keys(fieldErrors).length) return { status: "error", fieldErrors, values };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`${LOGIN_PATH}?error=session_expired&next=/profile`);
+
+  // RLS limits this to the user's own row; column grants limit it to the editable fields.
+  const { data: updated, error } = await supabase.from("profiles")
+    .update({ full_name: fullName, account_type: accountType, headline, organization })
+    .eq("id", user.id).select("id");
+  if (error || !updated?.length) {
+    console.error("[auth] profile update failed", error?.code ?? "no_row");
+    return { status: "error", message: "We couldn't save your changes. Please try again.", values };
+  }
+  revalidatePath("/", "layout");
+  return { status: "success", message: "Profile saved." };
+}

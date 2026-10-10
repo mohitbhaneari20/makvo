@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CalendarPlus, FileText, FolderPlus, Handshake as HandshakeIcon, Paperclip, Plus, Search, Send, Share2, Video } from "lucide-react";
-import { contact } from "@/data/social";
+import { contact, TEAM_REPLY } from "@/data/social";
 import { PROJECTS, projectById } from "@/data/projects";
 import { JOBS, jobById } from "@/data/jobs";
 import { PEOPLE } from "@/data/people";
@@ -61,7 +61,7 @@ function Inner() {
   const job = convo?.context ? JOBS.find((j) => j.id === convo.context) : null;
   const ctxProject = convo?.context && PROJECTS.find((p) => p.id === convo.context);
 
-  const reply = (c: Conversation) => { setTyping(true); setTimeout(() => { setTyping(false); receive(c.id, { kind: "text", text: REPLIES[Math.floor(Math.random() * REPLIES.length)] }); }, 1700); };
+  const reply = (c: Conversation) => { setTyping(true); setTimeout(() => { setTyping(false); receive(c.id, { kind: "text", text: c.with === "makvo" ? TEAM_REPLY : REPLIES[Math.floor(Math.random() * REPLIES.length)] }); }, 1700); };
   const submit = (e?: React.FormEvent) => { e?.preventDefault(); if (!draft.trim() || !convo) return; send(convo.id, { kind: "text", text: draft.trim() }); setDraft(""); reply(convo); };
   const open = (id: string) => { setActiveId(id); setMobileThread(true); };
 
@@ -70,7 +70,9 @@ function Inner() {
   const doProject = () => { if (!convo) return; const name = projName || convo.topic; const id = createProject(name, convo.with); send(convo.id, { kind: "system", text: `Project “${name}” created. Workspace is ready.` }); setModal(null); toast("Project workspace created"); void id; };
   const doHire = () => { if (!convo || !who) return; const name = convo.topic; hire(name, convo.with); send(convo.id, { kind: "system", text: `${who.name} hired for “${name}” · $${price}. Workspace is ready.` }); setModal(null); toast(`${who.name.split(" ")[0]} hired. Workspace created`); };
 
-  const actions = [
+  // The MAKVO team thread is support, not a deal: no interview, project or hire actions there.
+  const isTeam = convo?.with === "makvo";
+  const actions = isTeam ? [] : [
     { l: "Create Project", i: FolderPlus, f: () => { setProjName(convo?.topic ?? ""); setModal("project"); } },
     { l: "Invite to Interview", i: CalendarPlus, f: () => setModal("interview") },
     { l: "Share Work", i: Share2, f: () => setModal("share") },
@@ -103,7 +105,7 @@ function Inner() {
             <Avatar name={who.name} tone={who.tone} size={40} status="online" />
             <div className="min-w-0 flex-1"><div className="truncate text-body font-medium">{who.name}</div><div className="truncate text-small text-mute">{convo.topic}</div></div>
             {who.href && <Button size="sm" variant="outline" href={who.href} className="hidden sm:inline-flex">Profile</Button>}
-            <Button size="sm" variant="outline" icon={<Video className="h-3.5 w-3.5" />} href={PEOPLE.some((p) => p.id === convo.with) ? `/interview?with=${convo.with}` : "/interview"}>Interview</Button>
+            {!isTeam && <Button size="sm" variant="outline" icon={<Video className="h-3.5 w-3.5" />} href={PEOPLE.some((p) => p.id === convo.with) ? `/interview?with=${convo.with}` : "/interview"}>Interview</Button>}
           </header>
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-6 md:px-6">
             <div className="mb-2 text-center text-[11px] uppercase tracking-wider text-faint">Today</div>
@@ -112,9 +114,9 @@ function Inner() {
             <div ref={end} />
           </div>
           <div className="border-t border-line bg-paper p-3 md:p-4">
-            <div className="no-scrollbar mb-3 hidden gap-2 overflow-x-auto md:flex">{actions.map((a) => <button key={a.l} onClick={a.f} className="inline-flex shrink-0 items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 text-small transition hover:border-ink"><a.i className="h-3.5 w-3.5" />{a.l}</button>)}</div>
+            {actions.length > 0 && <div className="no-scrollbar mb-3 hidden gap-2 overflow-x-auto md:flex">{actions.map((a) => <button key={a.l} onClick={a.f} className="inline-flex shrink-0 items-center gap-2 rounded-md border border-line bg-surface px-3 py-1.5 text-small transition hover:border-ink"><a.i className="h-3.5 w-3.5" />{a.l}</button>)}</div>}
             <form onSubmit={submit} className="flex items-end gap-2">
-              <div className="md:hidden"><Popover width="w-56" trigger={({ toggle }) => <button type="button" onClick={toggle} aria-label="Actions" className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface"><Plus className="h-5 w-5" /></button>}>{(close) => <div className="p-1.5">{actions.map((a) => <button type="button" key={a.l} onClick={() => { a.f(); close(); }} className="flex w-full items-center gap-3 rounded-xs px-3 py-3 text-left text-body hover:bg-sunk"><a.i className="h-4 w-4" />{a.l}</button>)}</div>}</Popover></div>
+              {actions.length > 0 && <div className="md:hidden"><Popover width="w-56" trigger={({ toggle }) => <button type="button" onClick={toggle} aria-label="Actions" className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface"><Plus className="h-5 w-5" /></button>}>{(close) => <div className="p-1.5">{actions.map((a) => <button type="button" key={a.l} onClick={() => { a.f(); close(); }} className="flex w-full items-center gap-3 rounded-xs px-3 py-3 text-left text-body hover:bg-sunk"><a.i className="h-4 w-4" />{a.l}</button>)}</div>}</Popover></div>}
               <div className="flex min-h-11 flex-1 items-center gap-2 rounded-full border border-line bg-surface px-4 focus-within:border-ink"><input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={`Message ${who.name.split(" ")[0]}`} className="h-11 flex-1 bg-transparent text-body outline-none placeholder:text-faint" /><button type="button" aria-label="Attach file" onClick={() => { send(convo.id, { kind: "file", file: { name: "brief-v2.pdf", size: "1.8 MB" } }); toast("File attached"); }} className="text-mute hover:text-ink"><Paperclip className="h-4 w-4" /></button></div>
               <Button type="submit" disabled={!draft.trim()} className="h-11 w-11 !px-0" aria-label="Send"><Send className="h-4 w-4" /></Button>
             </form>
@@ -126,13 +128,13 @@ function Inner() {
       {convo && who && (
         <aside className="hidden min-h-0 overflow-y-auto p-6 xl:block">
           <div className="text-center"><div className="mx-auto w-fit"><Avatar name={who.name} tone={who.tone} size={72} /></div><div className="mt-3 text-h3">{who.name}</div><div className="text-small text-mute">{who.role}</div>{who.href && <Button size="sm" variant="outline" className="mt-4" href={who.href}>View profile</Button>}</div>
-          <div className="mt-8 border-t border-line pt-6"><div className="t-caption mb-3">Linked project</div>
+          {!isTeam && <div className="mt-8 border-t border-line pt-6"><div className="t-caption mb-3">Linked project</div>
             {linkedWorkspace ? <Link href={`/projects/${linkedWorkspace.id}`} className="block rounded-md border border-line bg-surface p-4 transition hover:border-ink"><div className="text-body font-medium">{linkedWorkspace.name}</div><div className="text-small text-mute">Workspace · Open</div></Link>
               : convo.id === "c1" ? <Link href="/projects/finora-website" className="block rounded-md border border-line bg-surface p-4 transition hover:border-ink"><div className="text-body font-medium">Finora Website</div><div className="mt-1 text-small text-mute">In progress · 68%</div><div className="mt-3 h-1 overflow-hidden rounded-full bg-sunk"><div className="h-full w-[68%] bg-ink" /></div></Link>
               : job ? <Link href={`/opportunities/${job.id}`} className="block rounded-md border border-line bg-surface p-4 transition hover:border-ink"><div className="text-body font-medium">{job.title}</div><div className="text-small text-mute">{job.client} · Opportunity</div></Link>
               : ctxProject ? null : <p className="text-small text-mute">Nothing linked yet. Create a project from this conversation.</p>}
             {!linkedWorkspace && convo.id !== "c1" && <Button size="sm" variant="outline" className="mt-3" icon={<FolderPlus className="h-3.5 w-3.5" />} onClick={() => { setProjName(convo.topic); setModal("project"); }}>Create project</Button>}
-          </div>
+          </div>}
           <div className="mt-8 border-t border-line pt-6"><div className="t-caption mb-3">Shared in this chat</div>
             <ul className="space-y-2.5 text-small">{convo.thread.filter((m) => m.kind === "file" || m.kind === "project").map((m, i) => <li key={i} className="flex items-center gap-2.5"><FileText className="h-4 w-4 text-mute" />{m.file?.name ?? projectById(m.projectId!).name + " case study"}</li>)}{!convo.thread.some((m) => m.kind === "file" || m.kind === "project") && <li className="text-mute">Files and projects you share will show up here.</li>}</ul></div>
         </aside>

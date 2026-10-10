@@ -65,6 +65,7 @@ export const CONVERSATIONS: Conversation[] = [
 
 // External (client) contacts that are not creators in the network.
 export const CLIENT_CONTACTS: Record<string, { name: string; role: string; tone: string }> = {
+  makvo: { name: `${BRAND.name} Team`, role: "Here to help", tone: "#DBE64C" },
   "ines-carvalho": { name: "Ines Carvalho", role: "Founder, Atelier Sol", tone: "#EBD6C4" },
   "daniel-roth": { name: "Daniel Roth", role: "CEO, Finora", tone: "#C8D8C0" },
 };
@@ -83,3 +84,24 @@ export function contact(id: string): { id: string; name: string; role: string; t
   const c = CLIENT_CONTACTS[id];
   return { id, name: c?.name ?? id, role: c?.role ?? "", tone: c?.tone ?? "#E4DED2" };
 }
+
+/** A new member's inbox: one welcome thread from the MAKVO team, instead of the demo conversations. */
+export function welcomeInbox(firstName: string | null, accountType: string | null): Conversation[] {
+  const hi = firstName ? `Hi ${firstName}, welcome to ${BRAND.name}!` : `Welcome to ${BRAND.name}!`;
+  const tip = accountType === "client"
+    ? "Describe what you need in Find talent and we'll match you with people whose finished work fits. You can message anyone straight from their profile."
+    : accountType === "studio"
+      ? "Invite your team and present the work you've shipped together. Clients can hire you as one."
+      : "Start by publishing a project you're proud of. Clients find people here through their work, not their CV.";
+  return [{
+    id: "c-welcome", with: "makvo", topic: "Welcome", unread: 1, last: hi, at: "Now",
+    thread: [
+      { from: "them", text: hi, at: "Now" },
+      { from: "them", text: tip, at: "Now" },
+      { from: "them", text: "Conversations with people you connect with will show up here. Reply any time if you have a question.", at: "Now" },
+    ],
+  }];
+}
+
+/** Auto-reply used by the prototype's chat. The MAKVO team thread gets an honest answer instead of a canned client reply. */
+export const TEAM_REPLY = "Thanks for writing. Someone from the team will reply here soon.";

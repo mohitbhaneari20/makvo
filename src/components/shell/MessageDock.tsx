@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, ExternalLink, FileText, Minus, Paperclip, Send, SquarePen, X } from "lucide-react";
-import { contact } from "@/data/social";
+import { contact, TEAM_REPLY } from "@/data/social";
+import { useAuth } from "@/lib/auth/context";
 import { projectById } from "@/data/projects";
 import { useApp } from "@/lib/store";
 import type { Conversation, Message } from "@/data/types";
@@ -38,7 +39,7 @@ function ChatWindow({ convo, onClose, onMin, min }: { convo: Conversation; onClo
   const submit = (e: React.FormEvent) => {
     e.preventDefault(); if (!draft.trim()) return;
     send(convo.id, { kind: "text", text: draft.trim() }); setDraft(""); setTyping(true);
-    setTimeout(() => { setTyping(false); receive(convo.id, { kind: "text", text: REPLIES[Math.floor(Math.random() * REPLIES.length)] }); }, 1600);
+    setTimeout(() => { setTyping(false); receive(convo.id, { kind: "text", text: convo.with === "makvo" ? TEAM_REPLY : REPLIES[Math.floor(Math.random() * REPLIES.length)] }); }, 1600);
   };
   return (
     <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={{ type: "spring", stiffness: 420, damping: 34 }}
@@ -68,6 +69,7 @@ function ChatWindow({ convo, onClose, onMin, min }: { convo: Conversation; onClo
 export function MessageDock() {
   const path = usePathname();
   const { convos } = useApp();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [wins, setWins] = useState<string[]>([]);
   const [mins, setMins] = useState<string[]>([]);
@@ -88,7 +90,7 @@ export function MessageDock() {
       </AnimatePresence>
       <div className="pointer-events-auto w-[300px] overflow-hidden rounded-t-md border border-b-0 border-line bg-paper shadow-pop">
         <button onClick={() => setOpen((o) => !o)} className="flex h-[52px] w-full items-center gap-3 bg-surface px-3 text-left" aria-expanded={open}>
-          <span className="relative"><Avatar name="Varun Sharma" tone="#E9C8B0" size={30} status="online" />{!open && unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold text-midnight">{unread}</span>}</span>
+          <span className="relative"><Avatar name={user?.fullName || user?.email || "Varun Sharma"} src={user?.avatarUrl} size={30} status="online" />{!open && unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold text-midnight">{unread}</span>}</span>
           <span className="flex-1 text-small font-medium">Messaging</span>
           <SquarePen className="h-4 w-4 text-mute" />
           <ChevronDown className={`h-4 w-4 text-mute transition-transform ${open ? "" : "rotate-180"}`} />

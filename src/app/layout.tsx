@@ -30,7 +30,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
       <body style={{ ["--font-sans" as string]: "var(--font-geist-sans)", ["--font-mono" as string]: "var(--font-geist-mono)" }}>
         <AuthProvider user={user} configured={isSupabaseConfigured()}>
-          <AppProvider initialRole={user?.accountType === "client" ? "client" : "creator"}>
+          {/* Keyed by user so signing in as someone else starts from a clean state. */}
+          <AppProvider key={user?.id ?? "guest"} initialRole={user?.accountType === "client" ? "client" : "creator"}
+            member={user ? { firstName: user.fullName?.split(" ")[0] ?? null, accountType: user.accountType } : null}>
             <Shell>{children}</Shell>
           </AppProvider>
         </AuthProvider>
