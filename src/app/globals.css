@@ -108,3 +108,13 @@ body { padding-bottom: env(safe-area-inset-bottom); }
 /* Midnight surfaces need an edge when the ground is also Midnight. */
 [data-theme="dark"] .grad-midnight { box-shadow: inset 0 0 0 1px rgb(var(--line)); }
 [data-theme="dark"] .shadow-soft, [data-theme="dark"] .shadow-pop { box-shadow: 0 0 0 1px rgb(var(--line)), 0 16px 40px -16px rgb(0 0 0 / .5); }
+
+/* Two-thumb range slider: stacked native inputs; only the thumbs take pointer events. */
+.range-thumb { -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none; height: 20px; margin: 0; }
+.range-thumb:focus { outline: none; }
+.range-thumb::-webkit-slider-runnable-track { background: transparent; height: 20px; }
+.range-thumb::-moz-range-track { background: transparent; height: 20px; }
+.range-thumb::-webkit-slider-thumb { -webkit-appearance: none; pointer-events: auto; width: 20px; height: 20px; border-radius: 9999px; background: rgb(var(--paper)); border: 2px solid rgb(var(--ink)); cursor: grab; box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+.range-thumb::-moz-range-thumb { pointer-events: auto; width: 16px; height: 16px; border-radius: 9999px; background: rgb(var(--paper)); border: 2px solid rgb(var(--ink)); cursor: grab; }
+.range-thumb:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgb(var(--ink) / 0.15); }
+.range-thumb:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px rgb(var(--ink) / 0.15); }

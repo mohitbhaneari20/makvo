@@ -38,12 +38,9 @@ export function Logo({ className = "", mark = false, markOnly = false, height = 
 }
 
 const NAV = [
-  { label: "Discover", href: "/discover", match: ["/discover", "/work", "/feed"] },
-  { label: "Projects", href: "/projects", match: ["/projects"], wide: true },
-  { label: "People", href: "/people", match: ["/people", "/teams", "/network"] },
-  { label: "Opportunities", href: "/opportunities", match: ["/opportunities", "/talent"] },
-  { label: "Awards", href: "/awards", match: ["/awards"], wide: true },
-  { label: "Messages", href: "/messages", match: ["/messages"], wide: true },
+  { label: "Discover", href: "/discover", match: ["/discover", "/work", "/feed", "/people", "/teams"] },
+  { label: "Hire", href: "/talent", match: ["/talent", "/opportunities"] },
+  { label: "Dashboard", href: "/dashboard", match: ["/dashboard"] },
 ];
 
 function TopNav() {
@@ -59,9 +56,8 @@ function TopNav() {
             {NAV.map((n) => {
               const active = n.match.some((m) => path === m || path.startsWith(m + "/"));
               return (
-                <Link key={n.href} href={n.href} className={`relative whitespace-nowrap rounded-full px-2.5 py-2 text-body transition-colors lg:px-3 ${"wide" in n && n.wide ? "hidden xl:inline-block" : ""} ${active ? "text-ink" : "text-ink/75 hover:text-ink"}`}>
+                <Link key={n.href} href={n.href} className={`relative whitespace-nowrap rounded-full px-2.5 py-2 text-body transition-colors lg:px-3 ${active ? "text-ink" : "text-ink/75 hover:text-ink"}`}>
                   {n.label}
-                  {n.label === "Messages" && <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold text-midnight">3</span>}
                   {active && <motion.span layoutId="nav-active" className="absolute inset-x-3 -bottom-[17px] h-0.5 bg-hi" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
                 </Link>
               );

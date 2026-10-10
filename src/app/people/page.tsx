@@ -6,14 +6,17 @@ import { PEOPLE } from "@/data/people";
 import type { Person, PeopleGroup } from "@/data/types";
 import { PersonCard } from "@/components/cards/PersonCard";
 import { Chip, Empty, Skeleton, useFakeLoad } from "@/components/ui/Misc";
-import { Select } from "@/components/ui/Dropdown";
+import { MultiFilter, RangeFilter, type Range } from "@/components/ui/Filters";
 import { SubNav, PEOPLE_NAV } from "@/components/shell/SubNav";
 import { Button } from "@/components/ui/Button";
 
 const GROUPS: ("All" | PeopleGroup)[] = ["All", "Design", "Development", "Branding", "Product", "Motion", "3D", "AI", "No-Code"];
 const AVAIL = ["Available", "Limited", "Booked"] as const;
-const EXP = ["0–3 years", "4–7 years", "8+ years"] as const;
-const BUDGET = ["Under $2K", "$2K–$5K", "$5K–$10K", "$10K+"] as const;
+// Ranges: the top of each scale means "or more".
+const EXP_SCALE: Range = [0, 15];
+const EXP_PRESETS = [{ label: "Up to 3 yrs", range: [0, 3] as Range }, { label: "4–7 yrs", range: [4, 7] as Range }, { label: "8–12 yrs", range: [8, 12] as Range }, { label: "12+ yrs", range: [12, 15] as Range }];
+const BUDGET_SCALE: Range = [0, 15]; // project budget, $K
+const BUDGET_PRESETS = [{ label: "Under $2K", range: [0, 2] as Range }, { label: "$2K–$5K", range: [2, 5] as Range }, { label: "$5K–$10K", range: [5, 10] as Range }, { label: "$10K+", range: [10, 15] as Range }];
 const LOC = ["Asia", "Europe", "North America", "Latin America", "Africa"] as const;
 const SKILLS = Array.from(new Set(PEOPLE.flatMap((p) => p.skills))).sort() as string[];
 
@@ -30,28 +33,26 @@ function Inner() {
   const sp = useSearchParams();
   const initial = (GROUPS.find((g) => g === sp.get("group")) ?? "All") as (typeof GROUPS)[number];
   const [group, setGroup] = useState(initial);
-  const [avail, setAvail] = useState(""); const [exp, setExp] = useState(""); const [budget, setBudget] = useState("");
-  const [loc, setLoc] = useState(""); const [skill, setSkill] = useState(""); const [remote, setRemote] = useState(false);
-  const loading = useFakeLoad([group, avail, exp, budget, loc, skill, remote], 450);
+  const [avail, setAvail] = useState<string[]>([]); const [exp, setExp] = useState<Range>(EXP_SCALE); const [budget, setBudget] = useState<Range>(BUDGET_SCALE);
+  const [loc, setLoc] = useState<string[]>([]); const [skills, setSkills] = useState<string[]>([]); const [remote, setRemote] = useState(false);
+  const loading = useFakeLoad([group, avail.join(), exp.join(), budget.join(), loc.join(), skills.join(), remote], 450);
 
   const list = useMemo(() => PEOPLE.filter((p) => {
     if (group !== "All" && !p.group.includes(group)) return false;
-    if (avail && p.availability !== avail) return false;
-    if (exp === "0–3 years" && p.years > 3) return false;
-    if (exp === "4–7 years" && (p.years < 4 || p.years > 7)) return false;
-    if (exp === "8+ years" && p.years < 8) return false;
-    const [lo, hi] = p.rate;
-    if (budget === "Under $2K" && lo > 2) return false;
-    if (budget === "$2K–$5K" && !(lo <= 5 && hi >= 2)) return false;
-    if (budget === "$5K–$10K" && !(lo <= 10 && hi >= 5)) return false;
-    if (budget === "$10K+" && hi < 10) return false;
-    if (loc && region(p) !== loc) return false;
-    if (skill && !p.skills.includes(skill)) return false;
+    if (avail.length && !avail.includes(p.availability)) return false;
+    // Top of the scale is open-ended ("15+ yrs", "$15K+").
+    if (p.years < exp[0] || (exp[1] < EXP_SCALE[1] && p.years > exp[1])) return false;
+    const [lo, hi] = p.rate; // the person's typical project range overlaps the budget
+    if (hi < budget[0] || (budget[1] < BUDGET_SCALE[1] && lo > budget[1])) return false;
+    if (loc.length && !loc.includes(region(p))) return false;
+    if (skills.length && !skills.some((s) => p.skills.includes(s))) return false;
     if (remote && !p.remote) return false;
     return true;
-  }), [group, avail, exp, budget, loc, skill, remote]);
-  const active = group !== "All" || avail || exp || budget || loc || skill || remote;
-  const clear = () => { setGroup("All"); setAvail(""); setExp(""); setBudget(""); setLoc(""); setSkill(""); setRemote(false); };
+  }), [group, avail, exp, budget, loc, skills, remote]);
+  const expSet = exp[0] !== EXP_SCALE[0] || exp[1] !== EXP_SCALE[1];
+  const budgetSet = budget[0] !== BUDGET_SCALE[0] || budget[1] !== BUDGET_SCALE[1];
+  const active = group !== "All" || avail.length > 0 || expSet || budgetSet || loc.length > 0 || skills.length > 0 || remote;
+  const clear = () => { setGroup("All"); setAvail([]); setExp(EXP_SCALE); setBudget(BUDGET_SCALE); setLoc([]); setSkills([]); setRemote(false); };
 
   return (
     <div className="container-x pt-10 md:pt-16">
@@ -61,15 +62,17 @@ function Inner() {
 
       <div className="sticky top-14 z-30 -mx-5 border-b border-line bg-paper/90 px-5 py-3 backdrop-blur-md md:top-16 md:mx-0 md:px-0">
         <div className="no-scrollbar flex gap-2 overflow-x-auto">{GROUPS.map((g) => <Chip key={g} active={group === g} onClick={() => setGroup(g)}>{g}</Chip>)}</div>
-        <div className="no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto pb-0.5">
-          <Select label="Availability" value={avail as never} options={AVAIL} onChange={setAvail} />
-          <Select label="Experience" value={exp as never} options={EXP} onChange={setExp} />
-          <Select label="Budget" value={budget as never} options={BUDGET} onChange={setBudget} />
-          <Select label="Location" value={loc as never} options={LOC} onChange={setLoc} />
-          <Select label="Skills" value={skill} options={SKILLS} onChange={setSkill} />
+        <div className="mt-3 flex items-center gap-4">
+        <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5">
+          <MultiFilter label="Availability" options={AVAIL} value={avail} onChange={setAvail} count={(o) => PEOPLE.filter((p) => p.availability === o).length} />
+          <RangeFilter label="Experience" unit="years" min={EXP_SCALE[0]} max={EXP_SCALE[1]} value={exp} onChange={setExp} presets={EXP_PRESETS} format={(n, plus) => `${n}${plus ? "+" : ""} yrs`} bare={(n) => `${n}`} />
+          <RangeFilter label="Budget" unit="per project" min={BUDGET_SCALE[0]} max={BUDGET_SCALE[1]} value={budget} onChange={setBudget} presets={BUDGET_PRESETS} format={(n, plus) => `$${n}K${plus ? "+" : ""}`} />
+          <MultiFilter label="Location" options={LOC} value={loc} onChange={setLoc} count={(o) => PEOPLE.filter((p) => region(p) === o).length} />
+          <MultiFilter label="Skills" options={SKILLS} value={skills} onChange={setSkills} searchable count={(o) => PEOPLE.filter((p) => p.skills.includes(o)).length} />
           <button onClick={() => setRemote((r) => !r)} aria-pressed={remote} className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-sm border px-3 text-small transition ${remote ? "border-ink bg-ink text-paper" : "border-line bg-surface hover:border-ink"}`}>Remote only</button>
           {active && <button onClick={clear} className="inline-flex h-9 shrink-0 items-center gap-1 px-2 text-small text-mute hover:text-ink"><X className="h-3.5 w-3.5" />Clear</button>}
-          <span className="ml-auto shrink-0 pl-4 text-small tabular-nums text-mute">{list.length} {list.length === 1 ? "person" : "people"}</span>
+        </div>
+          <span className="hidden shrink-0 whitespace-nowrap text-small tabular-nums text-mute sm:block" aria-live="polite">{list.length} {list.length === 1 ? "person" : "people"}</span>
         </div>
       </div>
 
