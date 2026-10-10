@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isSupabaseConfigured, SUPABASE_URL } from "@/lib/supabase/env";
 import { DEFAULT_APP_PATH, LOGIN_PATH, ONBOARDING_PATH, safeNext } from "./routes";
 import { getSiteUrl } from "./site-url";
 import { authErrorMessage, isAccountType, validateEmail, validateFullName, validatePassword } from "./validation";
@@ -22,6 +22,7 @@ const str = (fd: FormData, key: string) => (typeof fd.get(key) === "string" ? (f
 const notConfigured: FormState = { status: "error", message: "Sign-in isn't set up yet. Add the Supabase environment variables to enable accounts." };
 import { SIGNUP_TYPE_COOKIE } from "./pending-type";
 import { getAuthProviders } from "./providers";
+import { PROFILE_MEDIA_BUCKET } from "./media-config";
 
 /* ---------------- Sign in ---------------- */
 export async function signInWithPassword(_: FormState, fd: FormData): Promise<FormState> {
@@ -212,4 +213,32 @@ export async function updateProfile(_: FormState, fd: FormData): Promise<FormSta
   }
   revalidatePath("/", "layout");
   return { status: "success", message: "Profile saved." };
+}
+
+/* ---------------- Profile and cover images ---------------- */
+/**
+ * Saves (or clears) the profile or cover image after the browser uploaded it to Storage.
+ * Only accepts public URLs inside the signed-in user's own folder of the profile-media bucket.
+ */
+export async function setProfileImage(kind: "avatar" | "cover", url: string | null): Promise<{ ok: boolean; message?: string }> {
+  if (!isSupabaseConfigured()) return { ok: false, message: notConfigured.message };
+  if (kind !== "avatar" && kind !== "cover") return { ok: false, message: "Unknown image type." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "Your session has ended. Please sign in again." };
+
+  if (url !== null) {
+    const prefix = `${SUPABASE_URL}/storage/v1/object/public/${PROFILE_MEDIA_BUCKET}/${user.id}/`;
+    if (typeof url !== "string" || url.length > 2048 || !url.startsWith(prefix) || url.slice(prefix.length).includes("..")) {
+      return { ok: false, message: "That image couldn't be used. Please try uploading it again." };
+    }
+  }
+  const column = kind === "avatar" ? "avatar_url" : "cover_url";
+  const { data: updated, error } = await supabase.from("profiles").update({ [column]: url }).eq("id", user.id).select("id");
+  if (error || !updated?.length) {
+    console.error("[auth] profile image update failed", error?.code ?? "no_row");
+    return { ok: false, message: error?.code === "42703" ? "Cover images aren't set up yet." : "We couldn't save the image. Please try again." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
 }

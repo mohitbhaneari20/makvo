@@ -10,6 +10,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge, Spark } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useApp } from "@/lib/store";
+import { ProfileImages } from "./ProfileImages";
 
 const initial: FormState = { status: "idle" };
 const ICONS: Record<AccountType, typeof Briefcase> = { client: Briefcase, designer: PenTool, developer: Code2, studio: UsersRound };
@@ -50,10 +51,13 @@ export function ProfileView({ user }: { user: SessionUser }) {
     <div className="container-x pb-24 pt-6 md:pt-8">
       <section>
         <div className="relative h-36 overflow-hidden rounded-lg bg-midnight md:h-52">
-          <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-nuit/60 blur-3xl" aria-hidden="true" />
-          <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-forest/50 blur-3xl" aria-hidden="true" />
+          {user.coverUrl
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={user.coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            : <><div className="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-nuit/60 blur-3xl" aria-hidden="true" />
+              <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-forest/50 blur-3xl" aria-hidden="true" /></>}
           <div className="absolute inset-x-0 bottom-0 h-1.5 grad-spring" />
-          <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-praxeti/10 px-3 py-1.5 text-[12px] text-praxeti backdrop-blur"><Spark className="h-3 w-3" color="#DBE64C" />Only you can see this page</div>
+          <div className="absolute right-5 top-5 flex items-center gap-2 rounded-full bg-midnight/70 px-3 py-1.5 text-[12px] text-praxeti backdrop-blur"><Spark className="h-3 w-3" color="#DBE64C" />Only you can see this page</div>
         </div>
 
         <div className="grid gap-10 lg:grid-cols-12">
@@ -85,6 +89,7 @@ export function ProfileView({ user }: { user: SessionUser }) {
         <section className="mt-12 rounded-md border border-line bg-surface p-5 md:p-8" aria-labelledby="edit-heading">
           <div className="mb-6 flex items-center justify-between gap-4"><h2 id="edit-heading" className="t-h2">Edit profile</h2>
             <button type="button" onClick={() => setEditing(false)} aria-label="Close editor" className="rounded-full p-2 text-mute transition hover:bg-sunk hover:text-ink"><X className="h-4 w-4" /></button></div>
+          <div className="mb-8 border-b border-line pb-8"><ProfileImages userId={user.id} name={name} avatarUrl={user.avatarUrl} coverUrl={user.coverUrl} /></div>
           <form action={action} noValidate className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
               {state.status === "error" && state.message && <FormAlert tone="error">{state.message}</FormAlert>}

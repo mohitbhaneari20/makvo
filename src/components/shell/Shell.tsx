@@ -178,7 +178,7 @@ function Sidebar() {
   const { user } = useAuth();
   const unread = convos.reduce((a, c) => a + c.unread, 0);
   const side = SIDE.map((i) => (i.href === "/messages" ? { ...i, badge: unread } : i));
-  const side2 = user ? [{ label: "Your profile", href: "/profile", icon: User, match: ["/profile"] }, ...SIDE2] : SIDE2;
+  const side2 = user ? [...SIDE2, { label: "Your profile", href: "/profile", icon: User, match: ["/profile"] }] : SIDE2;
   const Item = ({ i }: { i: (typeof SIDE)[number] | (typeof SIDE2)[number] }) => {
     const on = i.match.some((m) => path === m || path.startsWith(m + "/"));
     return (
